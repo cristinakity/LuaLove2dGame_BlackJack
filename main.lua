@@ -15,6 +15,7 @@ hand = {}
 total = 0
 comp = {}
 hold =false
+aiHold =false
 ai = 0
 love.window.setTitle(' Blackjack ')
 love.window.setMode( WIDE, HIGH)
@@ -41,15 +42,12 @@ function love.draw()
     love.graphics.printf(getText(languageValue.clickToHold), pad, 122, WIDE, 'left')
     love.graphics.draw(playback.img, WIDE-slot-pad,pad,0,settings.scale,settings.scale,0,0)
 
-    if hold == false then
-        -- love.graphics.printf(getText(languageValue.you)..": "..total.." vs. "..getText(languageValue.computer)..": "..ai,
-        -- 0,HIGH-76,WIDE,'center')    
+    if hold == true and aiHold == true then
+        win = winner()
+        love.graphics.printf(getText(languageValue.winner)..": "..win.."!!", 0,HIGH-76,WIDE,'center')
+    else
         love.graphics.printf(getText(languageValue.player)..":"..total, pad, HIGH-66, WIDE, 'left')
         love.graphics.printf(getText(languageValue.computer)..":"..ai, (WIDE*0.33)+(76)+pad, HIGH-66, WIDE, 'left')
-    else
-        win = winner()
-        love.graphics.printf(getText(languageValue.winner)..": "..win.."!!",
-        0,HIGH-76,WIDE,'center')
     end
 
     for i, card in ipairs(comp) do
@@ -65,28 +63,16 @@ function love.draw()
 end
 
 function setButtons()
-    resetButton = button:new(function() 
-     end
+    resetButton = button:new(function() end
       ,getText(languageValue.reset), WIDE-200, HIGH-66, 10, 10, {2,2,255}, buttonsFont, {0,0,0})
     
-    -- languageButton = button:new(function() 
-    --     hand = {}
-    --     comp = {}
-    --     ai = 0
-    --     total = 0
-    --  end
-    --   ,getText(languageValue.changeLanguage), WIDE-200, HIGH-126, 10, 10, {2,2,255}, buttonsFont, {0,0,0})
-
-      englishButton = button:new(function() 
-     end
+      englishButton = button:new(function() end
       ,getText(languageValue.english), WIDE-200, HIGH-126, 10, 10, {2,2,255}, buttonsFont, {0,0,0})
 
-      spanishButton = button:new(function() 
-       end
+      spanishButton = button:new(function() end
         ,getText(languageValue.spanish), WIDE-100, HIGH-126, 10, 10, {2,2,255}, buttonsFont, {0,0,0})
 
-      deckButton = button:new(function() 
-       end
+      deckButton = button:new(function() end
         ,getText(languageValue.changeDeck), WIDE-200, HIGH-192, 10, 10, {2,2,255}, buttonsFont, {0,0,0})
 end
 
@@ -143,6 +129,8 @@ function love.mousereleased(x,y,button)
                 local val = face(var.value)
                 ai = ai+val
                 print(var.value)
+            else
+                aiHold = true
             end
 
             if x > WIDE-slot-pad
@@ -184,6 +172,24 @@ function cargen()
     local c = math.random(1, 13)
     local v = values[c]
     local card = Card.init(s, v, settings.deckSet)
+    -- If car exists in hand or comp, generate other card
+    local existsInComp = false
+    for i, card1 in ipairs(comp) do
+        if card1.suit == card.suit and card1.value == card.value then
+            existsInComp = true
+            break
+        end
+    end  
+    local existsInHand = false
+    for i, card1 in ipairs(hand) do  
+        if card1.suit == card.suit and card1.value == card.value then
+            existsInHand = true
+            break
+        end
+    end
+    if existsInComp or existsInHand then
+        card = cargen()
+    end
     return card
 end
 
